@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Noble - Your Shopping Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .chatbox {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    #prompt {
+      width: 90%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      margin-left: 5px;
+    }
+    #reply {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="chatbox">
+    <h2>Ask Noble anything</h2>
+    <input id="prompt" placeholder="Ask in English or French" />
+    <button onclick="send()">Send</button>
+    <button id="voiceBtn">🎤</button>
+    <p id="reply"></p>
+  </div>
+
+  <script>
+    async function send() {
+      const prompt = document.getElementById('prompt').value;
+
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await res.json();
+      const replyText = data.reply || data.error || "No response";
+
+      // Display reply (with emojis)
+      document.getElementById('reply').innerText = replyText;
+
+      // Remove emojis for speech
+      const cleanText = replyText.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      speechSynthesis.speak(utterance);
+    }
+
+    // Voice input
+    document.getElementById('voiceBtn').addEventListener('click', () => {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.start();
+
+      recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('prompt').value = transcript;
+        send();
+      };
+    });
+  </script>
+</body>
+</html>
