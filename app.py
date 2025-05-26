@@ -6,7 +6,7 @@ from openai import OpenAI
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(_name, template_folder=os.path.join(os.path.dirname(file_), "../templates"))
+app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "../templates"))
 
 # Set up OpenRouter client
 client = OpenAI(
