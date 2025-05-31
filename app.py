@@ -5,7 +5,7 @@ from openai import OpenAI
 
 load_dotenv()
 
-app = Flask(__name__, template_folder="../templates")
+app = Flask(__name__, templates_folder="../templates")
 
 client = OpenAI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
