@@ -12,7 +12,7 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1"
 )
 
-@app.route("/")
+@app.route("/", methods=["GET","HEAD"])
 def home():
     return render_template("index.html")
 
