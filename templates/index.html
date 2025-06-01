@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,110 +10,125 @@
       padding: 0;
       font-family: Arial, sans-serif;
     }
-    .chatbot {
+
+    #chat-button {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 300px;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      background-color: #0044cc;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 20px;
+      cursor: pointer;
       z-index: 9999;
     }
-    .chatbot-header {
-      background-color: #002366;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      font-weight: bold;
+
+    #chat-window {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 300px;
+      max-height: 400px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      overflow: hidden;
+      z-index: 9999;
     }
-    .chatbox {
-      flex: 1;
+
+    #chat-messages {
+      flex-grow: 1;
       padding: 10px;
       overflow-y: auto;
-      max-height: 300px;
+      font-size: 14px;
     }
-    .message {
-      margin-bottom: 10px;
-      padding: 8px;
-      border-radius: 6px;
-    }
-    .user {
-      background-color: #e0f7fa;
-      align-self: flex-end;
-    }
-    .bot {
-      background-color: #f1f8e9;
-      align-self: flex-start;
-    }
-    .input-area {
+
+    #chat-input {
       display: flex;
-      border-top: 1px solid #ccc;
+      padding: 10px;
+      border-top: 1px solid #eee;
     }
-    input[type="text"] {
+
+    #chat-input input {
       flex: 1;
-      padding: 10px;
-      border: none;
-      outline: none;
+      padding: 8px;
     }
-    button {
-      padding: 10px;
-      border: none;
-      background-color: #007BFF;
+
+    #chat-input button {
+      background: #0044cc;
       color: white;
+      border: none;
+      padding: 8px 12px;
       cursor: pointer;
+    }
+
+    .bubble {
+      margin: 5px 0;
+    }
+
+    .user {
+      text-align: right;
+      color: #333;
+    }
+
+    .bot {
+      text-align: left;
+      color: #0044cc;
     }
   </style>
 </head>
 <body>
-  <div class="chatbot">
-    <div class="chatbot-header">Noble</div>
-    <div class="chatbox" id="chatbox"></div>
-    <div class="input-area">
-      <input type="text" id="userInput" placeholder="Ask Noble something..." />
-      <button id="sendButton">Send</button>
-    </div>
-  </div>  <script>
-    async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const userInput = input.value.trim();
-      if (!userInput) return;
+  <button id="chat-button">💬</button>
 
-      const chatbox = document.getElementById("chatbox");
-      const userMessage = document.createElement("div");
-      userMessage.className = "message user";
-      userMessage.textContent = userInput;
-      chatbox.appendChild(userMessage);
+  <div id="chat-window">
+    <div id="chat-messages"></div>
+    <div id="chat-input">
+      <input type="text" id="user-input" placeholder="Ask Noble..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatButton = document.getElementById("chat-button");
+    const chatWindow = document.getElementById("chat-window");
+
+    chatButton.addEventListener("click", () => {
+      chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
+    });
+
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
+
+      const chat = document.getElementById("chat-messages");
+
+      const userBubble = document.createElement("div");
+      userBubble.className = "bubble user";
+      userBubble.textContent = "You: " + message;
+      chat.appendChild(userBubble);
 
       input.value = "";
 
-      try {
-        const response = await fetch("/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ prompt: userInput })
-        });
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: message })
+      });
 
-        const data = await response.json();
-
-        const botMessage = document.createElement("div");
-        botMessage.className = "message bot";
-        botMessage.textContent = data.response || "Noble had no reply.";
-        chatbox.appendChild(botMessage);
-      } catch (err) {
-        const botMessage = document.createElement("div");
-        botMessage.className = "message bot";
-        botMessage.textContent = "Noble failed to respond.";
-        chatbox.appendChild(botMessage);
-      }
+      const data = await response.json();
+      const botBubble = document.createElement("div");
+      botBubble.className = "bubble bot";
+      botBubble.textContent = "Noble: " + data.response;
+      chat.appendChild(botBubble);
+      chat.scrollTop = chat.scrollHeight;
     }
-
-    document.getElementById("sendButton").addEventListener("click", sendMessage);
-  </script></body>
+  </script>
+</body>
 </html>
