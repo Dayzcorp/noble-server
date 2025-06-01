@@ -30,7 +30,7 @@ def chat():
         )
 
         reply = response.choices[0].message.content
-        return jsonify({"reply": reply})
+        return jsonify({"response": reply})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
