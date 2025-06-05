@@ -61,12 +61,12 @@ def chat():
     user_input = request.json.get("prompt", "")
 
     try:
-        product_info=get_shopify_products()
+        product_info= get_shopify_products()
 
         response = client.chat.completions.create(
             model="deepseek/deepseek-chat-v3-0324:free",
             messages=[
-                {"role": "system", "content": "You are Noble, a smart, witty, assistant for a Shopify store. Here is what's in your store:\n{product_info}. You only respond with clear human-like answers, never markdown, code, or GitHub links."},
+                {"role": "system", "content": f"You are Noble, a smart, witty, assistant for a Shopify store. Here is what's in your store:\n{product_info}. You only respond with clear human-like answers, never markdown, code, or GitHub links."},
                 {"role": "user", "content": user_input}
             ]
         )
