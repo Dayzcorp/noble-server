@@ -60,7 +60,7 @@ def chat():
         f"You are {os.getenv('BOT_NAME','Seep')}, a smart, witty assistant for a Shopify store.\n"
         "Here’s what’s in the store right now:\n"
         f"{product_info}\n\n"
-        "Only answer in clear, human-like text—no markdown, no code blocks."
+        "Only answer in clear, human-like text—no markdown (write nothing in bold), no code blocks."
     )
 
     try:
