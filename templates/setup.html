@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bot Setup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: auto;
+    }
+    input[type="text"], input[type="submit"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    input[type="submit"] {
+      background: #005b96;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    input[type="submit"]:hover {
+      background: #00487c;
+    }
+  </style>
+</head>
+<body>
+
+  <form method="POST">
+    <h2>Configure Your Chatbot</h2>
+
+    <label for="bot_name">Chatbot Name:</label>
+    <input type="text" id="bot_name" name="bot_name" placeholder="e.g. Seep" required>
+
+    <label for="shopify_domain">Shopify Domain:</label>
+    <input type="text" id="shopify_domain" name="shopify_domain" placeholder="yourshop.myshopify.com" required>
+
+    <label for="shopify_token">Storefront Access Token:</label>
+    <input type="text" id="shopify_token" name="shopify_token" placeholder="Paste token here..." required>
+
+    <input type="submit" value="Save & Launch">
+  </form>
+
+</body>
+</html>
