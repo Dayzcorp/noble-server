@@ -105,12 +105,12 @@ user_config = {
     }
 
 @app.route("/setup", methods=["GET", "POST"])
-    def setup():
-        if request.method == "POST":
-            user_config["bot_name"] = request.form.get("bot_name", "Seep")
-            user_config["shopify_domain"] = request.form.get("shopify_domain", "")
-            user_config["shopify_token"] = request.form.get("shopify_token", "")
-            return redirect(url_for("index"))
+def setup():
+    if request.method == "POST":
+        user_config["bot_name"] = request.form.get("bot_name", "Seep")
+        user_config["shopify_domain"] = request.form.get("shopify_domain", "")
+        user_config["shopify_token"] = request.form.get("shopify_token", "")
+        return redirect(url_for("index"))
         return render_template("setup.html")
 
 if __name__ == "__main__":
