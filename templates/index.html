@@ -1,49 +1,82 @@
-<!-- inside <head> keep your <style> as is -->
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ bot_name }}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    .chatbot {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 9999;
+    }
+    .header {
+      background-color: #005b96;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+    .messages {
+      flex: 1;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    .user {
+      text-align: right;
+      margin: 4px 0;
+    }
+    .bot {
+      text-align: left;
+      margin: 4px 0;
+      color: #005b96;
+    }
+    .input-area {
+      display: flex;
+      border-top: 1px solid #eee;
+    }
+    .input-area input {
+      flex: 1;
+      border: none;
+      padding: 8px;
+    }
+    .input-area button {
+      border: none;
+      background: #005b96;
+      color: #fff;
+      padding: 0 16px;
+    }
+  </style>
+</head>
 <body>
   <div class="chatbot">
     <div class="header">{{ bot_name }}</div>
-
     <div class="messages" id="msgs"></div>
-
     <div class="input-area">
-      <input id="txt"
-             placeholder="Ask {{ bot_name }}…"
-             autocomplete="off" />
+      <input id="txt" placeholder="Ask {{ bot_name }}..." autocomplete="off" />
       <button onclick="send()">Send</button>
     </div>
   </div>
 
   <script>
-    const msgs    = document.getElementById("msgs");
-    const botName = "{{ bot_name }}";
-
-    function append(who, text) {
-      const div = document.createElement("div");
-      div.className = who;
-      div.textContent = (who==="bot"? `${botName}: `:"You: ") + text;
-      msgs.appendChild(div);
-      msgs.scrollTop = msgs.scrollHeight;
-    }
-
-    async function send(){
-      const input = document.getElementById("txt");
-      const text  = input.value.trim();
-      if(!text) return;
-      append("user", text);
-      input.value = "";
-      try {
-        const res = await fetch("/chat", {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({prompt: text})
-        });
-        const {reply} = await res.json();
-        append("bot", reply);
-      } catch(e){
-        append("bot", "Sorry, something went wrong.");
-      }
-    }
+    const CONFIG = {
+      bot_name: "{{ bot_name }}",
+      shopify_domain: "{{ shop_domain }}"
+    };
   </script>
-<script src="{{ url_for('static', filename='seep.js') }}"></script>
+  <script src="{{ url_for('static', filename='seep.js') }}"></script>
 </body>
+</html>
