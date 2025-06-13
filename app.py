@@ -7,8 +7,6 @@ from openai import OpenAI
 load_dotenv()
 
 def get_shopify_products():
-    import os
-    import requests
 
     shop_domain = os.getenv("SHOP_DOMAIN")
     storefront_token = os.getenv("SHOPIFY_STOREFRONT_TOKEN")
