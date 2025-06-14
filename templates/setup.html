@@ -41,13 +41,13 @@
     <h2>Configure Your Chatbot</h2>
 
     <label for="bot_name">Chatbot Name:</label>
-    <input type="text" id="bot_name" name="bot_name" placeholder="e.g. Seep" required>
+    <input type="text" id="bot_name" name="bot_name" placeholder="e.g. Seep" value="{{ bot_name }}" required>
 
     <label for="shopify_domain">Shopify Domain:</label>
-    <input type="text" id="shopify_domain" name="shopify_domain" placeholder="yourshop.myshopify.com" required>
+    <input type="text" id="shopify_domain" name="shopify_domain" placeholder="yourshop.myshopify.com" value="{{ shopify_domain }}" required>
 
     <label for="shopify_token">Storefront Access Token:</label>
-    <input type="text" id="shopify_token" name="shopify_token" placeholder="Paste token here..." required>
+    <input type="text" id="shopify_token" name="shopify_token" placeholder="Paste token here..." value="{{ shopify_token }}">
 
     <input type="submit" value="Save & Launch">
   </form>

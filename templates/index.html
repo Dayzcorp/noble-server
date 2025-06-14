@@ -59,12 +59,18 @@
       color: #fff;
       padding: 0 16px;
     }
+    .spinner {
+      text-align: center;
+      padding: 8px;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="chatbot">
     <div class="header">{{ bot_name }}</div>
     <div class="messages" id="msgs"></div>
+    <div id="spinner" class="spinner">Loading...</div>
     <div class="input-area">
       <input id="txt" placeholder="Ask {{ bot_name }}..." autocomplete="off" />
       <button onclick="send()">Send</button>
