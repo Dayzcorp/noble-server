@@ -9,8 +9,8 @@ load_dotenv()
 app = Flask(__name__, template_folder="templates")
 app.secret_key = os.getenv("FLASK_SECRET", os.urandom(24))
 
-DEFAULT_BOT = os.getenv("BOT_NAME", "Seep")
-DEFAULT_DOMAIN = os.getenv("SHOP_DOMAIN", "")
+DEFAULT_BOT = os.getenv("BOT_NAME", "SEEP")
+DEFAULT_DOMAIN = os.getenv("SHOP_DOMAIN", "example.myshopify.com")
 DEFAULT_TOKEN = os.getenv("SHOPIFY_STOREFRONT_TOKEN", "")
 
 
@@ -116,6 +116,9 @@ def chat() -> tuple:
     bot_name = cfg.get("bot_name")
     token = cfg.get("shopify_token")
 
+    if user_input.strip().lower() == "/products":
+        return jsonify({"reply": get_shopify_products(shop_domain, token)})
+
     product_info = get_shopify_products(shop_domain, token)
     system_msg = (
         f"You are {bot_name}, a smart, witty assistant for a Shopify store. "
@@ -129,8 +132,8 @@ def chat() -> tuple:
         )
         reply = resp.choices[0].message.content
         return jsonify({"reply": reply})
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+    except Exception:
+        return jsonify({"error": "server_error"}), 500
 
 
 if __name__ == "__main__":
