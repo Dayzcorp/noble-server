@@ -1,5 +1,6 @@
 const msgs = document.getElementById("msgs");
 const input = document.getElementById("txt");
+const spinner = document.getElementById("spinner");
 
 let botName = CONFIG.bot_name || sessionStorage.getItem("bot_name") || "Seep";
 let shopifyDomain = CONFIG.shopify_domain || sessionStorage.getItem("shopify_domain") || "";
@@ -13,6 +14,7 @@ async function send() {
 
   append("user", text);
   input.value = "";
+  spinner.style.display = "block";
 
   try {
     const res = await fetch("/chat", {
@@ -31,6 +33,8 @@ async function send() {
     append("bot", reply);
   } catch (e) {
     append("bot", "Error talking to the server.");
+  } finally {
+    spinner.style.display = "none";
   }
 }
 
