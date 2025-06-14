@@ -37,5 +37,3 @@ function append(sender, text) {
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
-
-
