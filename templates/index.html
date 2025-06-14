@@ -12,9 +12,12 @@
     }
     .chatbot {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 300px;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      margin: 0 auto 10px;
+      max-width: 400px;
+      width: 100%;
       background-color: white;
       border: 1px solid #ccc;
       border-radius: 10px;
@@ -43,6 +46,16 @@
       text-align: left;
       margin: 4px 0;
       color: #005b96;
+    }
+    .message-text {
+      display: inline-block;
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+    .timestamp {
+      display: block;
+      font-size: 0.75em;
+      color: #777;
     }
     .input-area {
       display: flex;

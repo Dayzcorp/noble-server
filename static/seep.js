@@ -1,12 +1,14 @@
-const msgs = document.getElementById("msgs");
-const input = document.getElementById("txt");
-const spinner = document.getElementById("spinner");
+const msgs = document.getElementById('msgs');
+const input = document.getElementById('txt');
+const spinner = document.getElementById('spinner');
 
-let botName = CONFIG.bot_name || sessionStorage.getItem("bot_name") || "Seep";
-let shopifyDomain = CONFIG.shopify_domain || sessionStorage.getItem("shopify_domain") || "";
+let botName = sessionStorage.getItem('bot_name') || CONFIG.bot_name || 'SEEP';
+let shopifyDomain = sessionStorage.getItem('shopify_domain') || CONFIG.shopify_domain || 'example.myshopify.com';
+let shopifyToken = sessionStorage.getItem('shopify_token') || '';
 
-sessionStorage.setItem("bot_name", botName);
-sessionStorage.setItem("shopify_domain", shopifyDomain);
+sessionStorage.setItem('bot_name', botName);
+sessionStorage.setItem('shopify_domain', shopifyDomain);
+if (shopifyToken) sessionStorage.setItem('shopify_token', shopifyToken);
 
 async function send() {
   const text = input.value.trim();
@@ -23,16 +25,17 @@ async function send() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        prompt: text,
-        shop_domain: shopifyDomain
+        prompt: text
       })
     });
 
     const data = await res.json();
-    const reply = data.reply || data.error || "Sorry, I didn't get that.";
-    append("bot", reply);
+    if (data.error || !data.reply) {
+      throw new Error("server");
+    }
+    append("bot", data.reply);
   } catch (e) {
-    append("bot", "Error talking to the server.");
+    append("bot", "SEEP is sleeping right now. Try again soon!");
   } finally {
     spinner.style.display = "none";
   }
@@ -47,9 +50,34 @@ input.addEventListener("keyup", (e) => {
 window.send = send;
 
 function append(sender, text) {
-  const div = document.createElement("div");
-  div.className = sender;
-  div.textContent = `${sender === "user" ? "You" : botName}: ${text}`;
-  msgs.appendChild(div);
+  const wrapper = document.createElement('div');
+  wrapper.className = sender;
+  const message = document.createElement('div');
+  message.className = 'message-text';
+  const time = document.createElement('span');
+  time.className = 'timestamp';
+  time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  wrapper.appendChild(message);
+  wrapper.appendChild(time);
+  msgs.appendChild(wrapper);
   msgs.scrollTop = msgs.scrollHeight;
+
+  if (sender === 'bot') {
+    message.textContent = botName + ': ';
+    const clean = text.replace(/[\*_`]/g, '');
+    typeText(message, clean);
+  } else {
+    message.textContent = 'You: ' + text;
+  }
+}
+
+function typeText(el, text) {
+  let i = 0;
+  (function tick() {
+    if (i < text.length) {
+      el.textContent += text.charAt(i);
+      i++;
+      setTimeout(tick, 20);
+    }
+  })();
 }
