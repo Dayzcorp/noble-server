@@ -33,7 +33,8 @@ async function send() {
 function append(sender, text) {
   const div = document.createElement("div");
   div.className = sender;
-  div.textContent = ${sender === "user" ? "You" : botName}: ${text};
+  div.textContent = `${sender === "user" ? "You" : botName}: ${text}`;
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
+
