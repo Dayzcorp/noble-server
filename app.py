@@ -9,6 +9,8 @@ load_dotenv()
 def get_shopify_products(shop_domain=None):
 
     shop_domain = shop_domain or os.getenv("SHOP_DOMAIN")
+    if not shop_domain:
+        return "Store domain not configured."
     storefront_token = os.getenv("SHOPIFY_STOREFRONT_TOKEN")
     url = f"https://{shop_domain}/api/2023-10/graphql.json"
 
