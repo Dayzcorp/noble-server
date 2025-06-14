@@ -23,7 +23,7 @@ async function send() {
     });
 
     const data = await res.json();
-    const reply = data.reply || "Sorry, I didn't get that.";
+    const reply = data.reply || data.error || "Sorry, I didn't get that.";
     append("bot", reply);
   } catch (e) {
     append("bot", "Error talking to the server.");
@@ -33,7 +33,8 @@ async function send() {
 function append(sender, text) {
   const div = document.createElement("div");
   div.className = sender;
-  div.textContent = ${sender === "user" ? "You" : botName}: ${text};
+  div.textContent = `${sender === "user" ? "You" : botName}: ${text}`;
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
+

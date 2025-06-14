@@ -6,9 +6,9 @@ from openai import OpenAI
 
 load_dotenv()
 
-def get_shopify_products():
+def get_shopify_products(shop_domain=None):
 
-    shop_domain = os.getenv("SHOP_DOMAIN")
+    shop_domain = shop_domain or os.getenv("SHOP_DOMAIN")
     storefront_token = os.getenv("SHOPIFY_STOREFRONT_TOKEN")
     url = f"https://{shop_domain}/api/2023-10/graphql.json"
 
@@ -65,7 +65,8 @@ client = OpenAI(
 def home():
     return render_template(
         "index.html",
-        bot_name=os.getenv("BOT_NAME", "Seep")
+        bot_name=os.getenv("BOT_NAME", "Seep"),
+        shop_domain=os.getenv("SHOP_DOMAIN", "")
     )
 
 @app.route("/chat", methods=["POST"])
@@ -108,8 +109,8 @@ def setup():
         user_config["bot_name"] = request.form.get("bot_name", "Seep")
         user_config["shopify_domain"] = request.form.get("shopify_domain", "")
         user_config["shopify_token"] = request.form.get("shopify_token", "")
-        return redirect(url_for("index"))
-        return render_template("setup.html")
+        return redirect(url_for("home"))
+    return render_template("setup.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
