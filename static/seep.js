@@ -1,9 +1,13 @@
 const msgs = document.getElementById("msgs");
-const botName = CONFIG.bot_name;
-const shopifyDomain = CONFIG.shopify_domain;
+const input = document.getElementById("txt");
+
+let botName = CONFIG.bot_name || sessionStorage.getItem("bot_name") || "Seep";
+let shopifyDomain = CONFIG.shopify_domain || sessionStorage.getItem("shopify_domain") || "";
+
+sessionStorage.setItem("bot_name", botName);
+sessionStorage.setItem("shopify_domain", shopifyDomain);
 
 async function send() {
-  const input = document.getElementById("txt");
   const text = input.value.trim();
   if (!text) return;
 
@@ -29,6 +33,14 @@ async function send() {
     append("bot", "Error talking to the server.");
   }
 }
+
+input.addEventListener("keyup", (e) => {
+  if (e.key === "Enter") {
+    send();
+  }
+});
+
+window.send = send;
 
 function append(sender, text) {
   const div = document.createElement("div");
