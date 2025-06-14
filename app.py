@@ -6,9 +6,8 @@ from openai import OpenAI
 
 load_dotenv()
 
-def get_shopify_products():
+def get_shopify_products(shop_domain: str):
 
-    shop_domain = os.getenv("SHOP_DOMAIN")
     storefront_token = os.getenv("SHOPIFY_STOREFRONT_TOKEN")
     url = f"https://{shop_domain}/api/2023-10/graphql.json"
 
