@@ -1,10 +1,9 @@
-Flask==2.3.2
+pip>=23.0
 setuptools>=65.0
 wheel>=0.36.2
-pip>=23.0
+Flask==2.3.2
 flask-cors==3.0.10
 requests==2.31.0
-openai==1.10.0
 openai==1.10.0
 gunicorn==21.2.0
 python-dotenv==1.0.1
