@@ -117,16 +117,25 @@ def chat() -> tuple:
     bot_name = cfg.get("bot_name")
     token = cfg.get("shopify_token")
 
+    print("User input:", user_input)
+    print("Shop domain:", shop_domain)
+    print("Token:", token)
+
     if user_input.strip().lower() == "/products":
+        print("Responding with product info")
         return jsonify({"reply": get_shopify_products(shop_domain, token)})
 
     product_info = get_shopify_products(shop_domain, token)
+    print("Product Info:", product_info)
+
     system_msg = (
         f"You are {bot_name}, a smart, witty assistant for a Shopify store. "
         f"Here's what's in the store:\n{product_info}\n\n"
         "Answer in clear, human-like text with no markdown, code, or links."
     )
+
     try:
+        print("About to send to OpenRouter...")
         resp = client.chat.completions.create(
             model="deepseek/deepseek-chat-v3-0324:free",
             messages=[
@@ -134,12 +143,12 @@ def chat() -> tuple:
                 {"role": "user", "content": user_input},
             ],
         )
-        print("AI response raw:", resp)  # <-- NEW LINE
+        print("OpenRouter response received.")
         reply = resp.choices[0].message.content
         return jsonify({"reply": reply})
     except Exception as e:
-        print("Error during chat:", e)
-        return jsonify({"error": str(e)}), 500
+        print("SEEP error:", e)
+        return jsonify({"error": "server_error"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
