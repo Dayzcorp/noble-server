@@ -1,6 +1,6 @@
 pip>=23.0
 setuptools>=65.0
-wheel
+wheel>=0.36.2
 absl-py==2.1.0
 annotated-types==0.7.0
 anyio==4.9.0
