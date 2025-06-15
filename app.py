@@ -129,13 +129,17 @@ def chat() -> tuple:
     try:
         resp = client.chat.completions.create(
             model="deepseek/deepseek-chat-v3-0324:free",
-            messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_input}],
+            messages=[
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": user_input},
+            ],
         )
+        print("AI response raw:", resp)  # <-- NEW LINE
         reply = resp.choices[0].message.content
         return jsonify({"reply": reply})
-    except Exception:
-        return jsonify({"error": "server_error"}), 500
-
+    except Exception as e:
+        print("Error during chat:", e)
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
