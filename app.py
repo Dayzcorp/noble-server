@@ -3,7 +3,6 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, s
 import requests
 from dotenv import load_dotenv
 from openai import OpenAI
-import httpx
 
 load_dotenv()
 
@@ -24,19 +23,10 @@ def get_config() -> dict:
     }
 
 
-_proxy = os.getenv("HTTPS_PROXY") or os.getenv("HTTP_PROXY")
-if _proxy:
-    http_client = httpx.Client(proxies=_proxy)
-    client = OpenAI(
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        base_url="https://openrouter.ai/api/v1",
-        http_client=http_client,
-    )
-else:
-    client = OpenAI(
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        base_url="https://openrouter.ai/api/v1",
-    )
+client = OpenAI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+)
 
 
 def get_shopify_products(domain: str | None = None, token: str | None = None) -> str:
