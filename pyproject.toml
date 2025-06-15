@@ -1,4 +1,4 @@
-# Build system configuration for Render
+# Build system config for Render using setuptools build backend
 [build-system]
 requires = ["setuptools>=65.0", "wheel>=0.36.2"]
 build-backend = "setuptools.build_meta"
