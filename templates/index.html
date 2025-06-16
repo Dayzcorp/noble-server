@@ -77,13 +77,27 @@
       padding: 8px;
       display: none;
     }
+    .spinner::after {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #ccc;
+      border-top-color: #005b96;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <div class="chatbot">
     <div class="header">{{ bot_name }}</div>
     <div class="messages" id="msgs"></div>
-    <div id="spinner" class="spinner">Loading...</div>
+    <div id="spinner" class="spinner"></div>
     <div class="input-area">
       <input id="txt" placeholder="Ask {{ bot_name }}..." autocomplete="off" />
       <button onclick="send()">Send</button>

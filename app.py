@@ -1,5 +1,6 @@
 import os
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+import re
 import requests
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -117,16 +118,13 @@ def chat() -> tuple:
     bot_name = cfg.get("bot_name")
     token = cfg.get("shopify_token")
 
-    print("User input:", user_input)
-    print("Shop domain:", shop_domain)
-    print("Token:", token)
+    # Debug logs can help during deployment but are suppressed in production
+    app.logger.debug("User input: %s", user_input)
 
     if user_input.strip().lower() == "/products":
-        print("Responding with product info")
         return jsonify({"reply": get_shopify_products(shop_domain, token)})
 
     product_info = get_shopify_products(shop_domain, token)
-    print("Product Info:", product_info)
 
     system_msg = (
         f"You are {bot_name}, a smart, witty assistant for a Shopify store. "
@@ -135,7 +133,6 @@ def chat() -> tuple:
     )
 
     try:
-        print("About to send to OpenRouter...")
         resp = client.chat.completions.create(
             model="deepseek/deepseek-chat-v3-0324:free",
             messages=[
@@ -143,11 +140,11 @@ def chat() -> tuple:
                 {"role": "user", "content": user_input},
             ],
         )
-        print("OpenRouter response received.")
         reply = resp.choices[0].message.content
-        return jsonify({"reply": reply})
+        clean_reply = re.sub(r"[\*_`]", "", reply)
+        return jsonify({"reply": clean_reply})
     except Exception as e:
-        print("SEEP error:", e)
+        app.logger.error("SEEP error: %s", e)
         return jsonify({"error": "server_error"}), 500
 
 if __name__ == "__main__":
