@@ -2,61 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Select Plan</title>
+  <title>Choose a SEEP Plan</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 40px;
-      background: #f5f5f5;
+      margin: 0;
+      padding: 40px 20px;
+      background: linear-gradient(to bottom right, #f5f7fa, #e4ecf4);
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .plans {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
     }
     .plan {
       background: #fff;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      flex: 1 1 250px;
+      max-width: 260px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      position: relative;
     }
-    .default {
-      border: 2px solid #005b96;
+    .badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #d0e4ff;
+      color: #005b96;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.8em;
     }
-    button {
+    .label {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 0.9em;
+      font-weight: bold;
+    }
+    .label.green { color: green; }
+    .label.red { color: red; }
+    .plan button {
+      margin-top: auto;
+      width: 100%;
       background: #005b96;
       color: #fff;
       border: none;
-      padding: 10px 20px;
+      padding: 10px;
       border-radius: 5px;
       cursor: pointer;
+    }
+    .plan button:hover {
+      background: #00487c;
     }
   </style>
 </head>
 <body>
   {% if message %}
-  <p style="color:red;">{{ message }}</p>
+    <div class="error">{{ message }}</div>
   {% endif %}
-  <h2>Select a SEEP Plan</h2>
+  <h1>Choose a SEEP Plan</h1>
+  <h2>Start your 7-day free trial or pick a commitment plan to unlock premium features.</h2>
   {% if active and current_plan in plans %}
-    <p><strong>Current Plan:</strong> {{ plans[current_plan].name }}</p>
-    <form method="post" action="{{ url_for('cancel_plan') }}">
+    <p style="text-align:center;"><strong>Current Plan:</strong> {{ plans[current_plan].name }}</p>
+    <form method="post" action="{{ url_for('cancel_plan') }}" style="text-align:center; margin-bottom:40px;">
       <button type="submit">Cancel Subscription</button>
     </form>
-    <hr>
   {% endif %}
-  {% for key, info in plans.items() %}
-    <div class="plan{% if key == 'monthly' %} default{% endif %}">
-      <h3>{{ info.name }}{% if key == 'monthly' %} (Recommended){% endif %}</h3>
-      <p>
-        {% if key == 'monthly' %}
-          Free 7-day trial, then $14.99 for 30 days → $19.99/month thereafter
-          <br><span style="color:green;">Cancel Anytime</span>
-        {% else %}
-          ${{ '%.2f'|format(info.monthly_price) }}/month billed monthly
-          <br><span style="color:red;">Commitment Plan – Cannot Cancel Early</span>
-        {% endif %}
-      </p>
+  {% set order = ['monthly', '3m', '6m', '12m'] %}
+  <div class="plans">
+  {% for key in order %}
+    {% set info = plans[key] %}
+    <div class="plan">
+      <h3>{{ info.name }}</h3>
+      {% if key == 'monthly' %}
+        <div class="badge">Recommended</div>
+        <p>Free 7-day trial, then $14.99 for 30 days → $19.99/month thereafter</p>
+        <span class="label green">Cancel Anytime</span>
+      {% else %}
+        <p>${{ '%.2f'|format(info.monthly_price) }}/month billed monthly</p>
+        <span class="label red">Commitment Plan – Cannot Cancel Early</span>
+      {% endif %}
       <form method="post" action="{{ url_for('select_plan', plan=key) }}">
         <button type="submit">Subscribe Now</button>
       </form>
     </div>
   {% endfor %}
+  </div>
 </body>
 </html>
