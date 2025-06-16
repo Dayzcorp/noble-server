@@ -67,12 +67,10 @@ def get_config() -> dict:
 
 
 def require_billing():
-    """Redirect to billing page if no active subscription is stored."""
-    if session.get("subscription_active"):
+    """Redirect to billing page if no active plan."""
+    if has_active_plan():
         return None
-    return redirect(
-        url_for("billing_select", message="Please subscribe to continue using SEEP.")
-    )
+    return redirect(url_for("billing", message="Please select a plan to continue."))
 
 
 # Initialize OpenAI client for OpenRouter. The modern SDK (>=1.76.2) no longer
@@ -170,7 +168,17 @@ def index() -> str:
     if guard:
         return guard
     cfg = get_config()
-    return render_template("index.html", bot_name=cfg["bot_name"], shop_domain=cfg["shopify_domain"])
+    status = plan_status()
+    plan_name = status["name"] if status else ""
+    expiry = status.get("expiry") if status else None
+    exp_str = expiry.strftime("%Y-%m-%d") if expiry else None
+    return render_template(
+        "index.html",
+        bot_name=cfg["bot_name"],
+        shop_domain=cfg["shopify_domain"],
+        plan_name=plan_name,
+        plan_expiry=exp_str,
+    )
 
 
 @app.route("/chat", methods=["POST"])
@@ -211,35 +219,92 @@ def chat() -> tuple:
 # Dummy billing helpers
 # ---------------------------------------------------------------------------
 
-def start_subscription(plan_key: str) -> None:
-    """Activate a subscription in the user's session."""
-    plan = BILLING_PLANS.get(plan_key)
-    if not plan:
+def start_plan(plan_key: str) -> None:
+    """Store the selected plan and start date in the session."""
+    if plan_key not in BILLING_PLANS:
         return
     now = datetime.utcnow()
-    session["subscription_type"] = plan_key
-    session["subscription_active"] = True
-    session["subscription_start"] = now.isoformat()
-    session["commitment_months"] = plan.get("commitment", 0)
-    trial_days = plan.get("trial_days", 0)
-    if trial_days:
-        session["trial_end"] = (now + timedelta(days=trial_days)).isoformat()
-    else:
-        session.pop("trial_end", None)
+    session["plan"] = plan_key
+    session["billing_start"] = now.isoformat()
+    session.pop("canceled", None)
 
 
 def months_since(start: str) -> int:
+    """Return the whole number of months between start date and now."""
     dt = datetime.fromisoformat(start)
     now = datetime.utcnow()
     return (now.year - dt.year) * 12 + now.month - dt.month
 
 
-@app.route("/billing/select")
-def billing_select() -> str:
+def has_active_plan() -> bool:
+    """Check whether the current session has an active plan."""
+    plan = session.get("plan")
+    start = session.get("billing_start")
+    if not plan or not start or session.get("canceled"):
+        return False
+
+    info = BILLING_PLANS.get(plan)
+    if not info:
+        return False
+
+    now = datetime.utcnow()
+    start_dt = datetime.fromisoformat(start)
+
+    if plan == "monthly":
+        trial_end = start_dt + timedelta(days=info.get("trial_days", 0))
+        intro_end = trial_end + timedelta(days=30)
+        if now < trial_end:
+            return True
+        if now < intro_end:
+            return True
+        # auto-renews indefinitely unless canceled
+        return True
+
+    commitment = info.get("commitment", 0)
+    if commitment:
+        if months_since(start) < commitment:
+            return True
+        return False
+
+    return False
+
+
+def plan_status() -> dict | None:
+    """Return plan name and expiry date if applicable."""
+    plan = session.get("plan")
+    start = session.get("billing_start")
+    if not plan or not start:
+        return None
+    info = BILLING_PLANS.get(plan)
+    if not info:
+        return None
+
+    start_dt = datetime.fromisoformat(start)
+    now = datetime.utcnow()
+
+    if plan == "monthly":
+        trial_end = start_dt + timedelta(days=info.get("trial_days", 0))
+        intro_end = trial_end + timedelta(days=30)
+        if now < trial_end:
+            return {"name": info["name"], "expiry": trial_end}
+        if now < intro_end:
+            return {"name": info["name"], "expiry": intro_end}
+        return {"name": info["name"], "expiry": None}
+
+    commitment = info.get("commitment", 0)
+    if commitment:
+        expiry = start_dt + timedelta(days=30 * commitment)
+        return {"name": info["name"], "expiry": expiry}
+
+    return {"name": info["name"], "expiry": None}
+
+
+@app.route("/billing")
+def billing() -> str:
     """Render plan selection page."""
     message = request.args.get("message")
-    active = session.get("subscription_active")
-    current_plan = session.get("subscription_type")
+    active = has_active_plan()
+    current_plan = session.get("plan")
     return render_template(
         "billing_select.html",
         plans=BILLING_PLANS,
@@ -249,37 +314,32 @@ def billing_select() -> str:
     )
 
 
-@app.route("/billing/subscribe/<plan>", methods=["POST"])
-def billing_subscribe(plan: str):
+@app.route("/select_plan/<plan>", methods=["POST"])
+def select_plan(plan: str):
     """Activate the selected plan (dummy billing)."""
     if plan not in BILLING_PLANS:
-        return redirect(url_for("billing_select", message="Invalid plan."))
-    start_subscription(plan)
+        return redirect(url_for("billing", message="Invalid plan."))
+    start_plan(plan)
     return redirect(url_for("index"))
 
 
-@app.route("/billing/cancel", methods=["POST"])
-def billing_cancel():
+@app.route("/cancel_plan", methods=["POST"])
+def cancel_plan():
     """Attempt to cancel the current subscription."""
-    if not session.get("subscription_active"):
-        return redirect(url_for("billing_select"))
-    plan = session.get("subscription_type")
+    if not has_active_plan():
+        return redirect(url_for("billing"))
+    plan = session.get("plan")
     info = BILLING_PLANS.get(plan, {})
-    start = session.get("subscription_start")
+    start = session.get("billing_start")
     if start and info.get("commitment"):
         months = months_since(start)
         if months < info["commitment"]:
             msg = "This plan cannot be canceled until the commitment period ends."
-            return redirect(url_for("billing_select", message=msg))
-    for key in [
-        "subscription_active",
-        "subscription_type",
-        "subscription_start",
-        "commitment_months",
-        "trial_end",
-    ]:
+            return redirect(url_for("billing", message=msg))
+    session["canceled"] = True
+    for key in ["plan", "billing_start"]:
         session.pop(key, None)
-    return redirect(url_for("billing_select", message="Subscription canceled."))
+    return redirect(url_for("billing", message="Subscription canceled."))
 
 
 

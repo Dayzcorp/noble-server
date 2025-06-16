@@ -16,6 +16,9 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       margin-bottom: 20px;
     }
+    .default {
+      border: 2px solid #005b96;
+    }
     button {
       background: #005b96;
       color: #fff;
@@ -33,14 +36,14 @@
   <h2>Select a SEEP Plan</h2>
   {% if active and current_plan in plans %}
     <p><strong>Current Plan:</strong> {{ plans[current_plan].name }}</p>
-    <form method="post" action="{{ url_for('billing_cancel') }}">
+    <form method="post" action="{{ url_for('cancel_plan') }}">
       <button type="submit">Cancel Subscription</button>
     </form>
     <hr>
   {% endif %}
   {% for key, info in plans.items() %}
-    <div class="plan">
-      <h3>{{ info.name }}</h3>
+    <div class="plan{% if key == 'monthly' %} default{% endif %}">
+      <h3>{{ info.name }}{% if key == 'monthly' %} (Recommended){% endif %}</h3>
       <p>
         {% if key == 'monthly' %}
           Free 7-day trial, then $14.99 for 30 days → $19.99/month thereafter
@@ -50,7 +53,7 @@
           <br><span style="color:red;">Commitment Plan – Cannot Cancel Early</span>
         {% endif %}
       </p>
-      <form method="post" action="{{ url_for('billing_subscribe', plan=key) }}">
+      <form method="post" action="{{ url_for('select_plan', plan=key) }}">
         <button type="submit">Subscribe Now</button>
       </form>
     </div>
