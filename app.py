@@ -1,5 +1,14 @@
 import os
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from flask import (
+    Flask,
+    request,
+    jsonify,
+    render_template,
+    redirect,
+    url_for,
+    session,
+    abort,
+)
 import requests
 import re
 from dotenv import load_dotenv
@@ -14,6 +23,16 @@ DEFAULT_BOT = os.getenv("BOT_NAME", "SEEP")
 DEFAULT_DOMAIN = os.getenv("SHOP_DOMAIN", "example.myshopify.com")
 DEFAULT_TOKEN = os.getenv("SHOPIFY_STOREFRONT_TOKEN", "")
 
+# Basic plan definitions for billing. Prices are in USD.
+BILLING_PLANS = {
+    "monthly": {"price": 14.99, "trial_days": 7, "name": "SEEP Monthly Plan"},
+    "3m": {"price": 53.97, "trial_days": 0, "name": "SEEP 3 Month Plan"},
+    "6m": {"price": 95.94, "trial_days": 0, "name": "SEEP 6 Month Plan"},
+    "12m": {"price": 159.92, "trial_days": 0, "name": "SEEP Annual Plan"},
+}
+
+SHOPIFY_API_VERSION = "2023-10"
+
 
 def get_config() -> dict:
     """Return current chatbot configuration."""
@@ -22,6 +41,13 @@ def get_config() -> dict:
         "shopify_domain": session.get("shopify_domain", DEFAULT_DOMAIN),
         "shopify_token": session.get("shopify_token", DEFAULT_TOKEN),
     }
+
+
+def require_billing():
+    """Redirect to billing page if no active charge is stored."""
+    if session.get("charge_status") == "active":
+        return None
+    return redirect(url_for("billing_select", message="Please accept billing to continue using SEEP."))
 
 
 # Initialize OpenAI client for OpenRouter. The modern SDK (>=1.76.2) no longer
@@ -87,6 +113,15 @@ def health() -> tuple[str, int]:
 
 @app.route("/setup", methods=["GET", "POST"])
 def setup() -> str:
+    guard = require_billing()
+    if guard and request.method != "POST":
+        # Allow first-time setup without billing
+        cfg = get_config()
+        if not cfg.get("shopify_domain") or not cfg.get("shopify_token"):
+            guard = None
+    if guard:
+        return guard
+
     cfg = get_config()
     if request.method == "POST":
         session["bot_name"] = request.form.get("bot_name", DEFAULT_BOT)
@@ -106,12 +141,19 @@ def setup() -> str:
 
 @app.route("/")
 def index() -> str:
+    guard = require_billing()
+    if guard:
+        return guard
     cfg = get_config()
     return render_template("index.html", bot_name=cfg["bot_name"], shop_domain=cfg["shopify_domain"])
 
 
 @app.route("/chat", methods=["POST"])
 def chat() -> tuple:
+    guard = require_billing()
+    if guard:
+        return guard
+
     data = request.get_json(force=True)
     user_input = data.get("prompt", "")
     cfg = get_config()
@@ -138,6 +180,84 @@ def chat() -> tuple:
         return jsonify({"reply": clean})
     except Exception:
         return jsonify({"error": "server_error"}), 500
+
+
+def create_shopify_charge(plan_key: str) -> tuple[str, int] | tuple[None, None]:
+    """Create a RecurringApplicationCharge and return confirmation URL and id."""
+    plan = BILLING_PLANS.get(plan_key)
+    cfg = get_config()
+    domain = cfg.get("shopify_domain")
+    token = cfg.get("shopify_token")
+    if not plan or not domain or not token:
+        return None, None
+    url = (
+        f"https://{domain}/admin/api/{SHOPIFY_API_VERSION}/recurring_application_charges.json"
+    )
+    charge = {
+        "name": plan["name"],
+        "price": plan["price"],
+        "trial_days": plan["trial_days"],
+        "return_url": url_for("billing_confirm", _external=True),
+        "test": True,
+    }
+    headers = {
+        "X-Shopify-Access-Token": token,
+        "Content-Type": "application/json",
+    }
+    try:
+        resp = requests.post(
+            url, json={"recurring_application_charge": charge}, headers=headers, timeout=10
+        )
+        data = resp.json().get("recurring_application_charge", {})
+        return data.get("confirmation_url"), data.get("id")
+    except Exception:
+        return None, None
+
+
+@app.route("/billing/select")
+def billing_select() -> str:
+    """Render plan selection page."""
+    message = request.args.get("message")
+    return render_template("billing_select.html", plans=BILLING_PLANS, message=message)
+
+
+@app.route("/billing/create/<plan>", methods=["POST"])
+def billing_create(plan: str):
+    """Create a charge for the selected plan and redirect to Shopify."""
+    confirmation_url, cid = create_shopify_charge(plan)
+    if not confirmation_url:
+        return redirect(url_for("billing_select", message="Could not create charge."))
+    session["plan"] = plan
+    session["charge_id"] = cid
+    session["charge_status"] = "pending"
+    return redirect(confirmation_url)
+
+
+@app.route("/billing/confirm")
+def billing_confirm() -> str:
+    """Activate the charge after the merchant accepts it."""
+    charge_id = request.args.get("charge_id") or session.get("charge_id")
+    if not charge_id:
+        return redirect(url_for("billing_select", message="Missing charge id."))
+    cfg = get_config()
+    domain = cfg.get("shopify_domain")
+    token = cfg.get("shopify_token")
+    url = (
+        f"https://{domain}/admin/api/{SHOPIFY_API_VERSION}/recurring_application_charges/{charge_id}/activate.json"
+    )
+    headers = {
+        "X-Shopify-Access-Token": token,
+        "Content-Type": "application/json",
+    }
+    try:
+        resp = requests.post(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            session["charge_status"] = "active"
+        else:
+            session["charge_status"] = "declined"
+    except Exception:
+        session["charge_status"] = "declined"
+    return redirect(url_for("index"))
 
 
 if __name__ == "__main__":
