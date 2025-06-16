@@ -183,13 +183,7 @@ def setup() -> str:
         if token:
             session["shopify_token"] = token
 
-        return render_template(
-            "setup.html",
-            bot_name=bot_name,
-            shopify_domain=domain,
-            shopify_token=token,
-            success=True,
-        )
+        return redirect(url_for("embed_instructions"))
 
     cfg = get_config()
     return render_template(
@@ -198,6 +192,17 @@ def setup() -> str:
         shopify_domain=cfg["shopify_domain"],
         shopify_token=cfg["shopify_token"],
         error=None,
+    )
+
+
+@app.route("/embed-instructions")
+@require_access
+def embed_instructions() -> str:
+    """Show instructions for embedding the widget."""
+    cfg = get_config()
+    return render_template(
+        "embed_instructions.html",
+        shopify_domain=cfg["shopify_domain"],
     )
 
 
