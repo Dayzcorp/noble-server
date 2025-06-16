@@ -420,6 +420,11 @@ def plan_status() -> dict | None:
 @app.route("/billing", methods=["GET", "POST"])
 def billing() -> Response:
     """Trigger Shopify billing or show plan selection."""
+    shop = session.get("shopify_domain")
+    token = session.get("access_token")
+    if not shop or not token:
+        return render_template("error.html", message="Missing Shopify credentials. Please log in again.")
+
     if request.method == "GET":
         if session.get("billing_active"):
             return redirect(url_for("setup"))
@@ -465,10 +470,13 @@ def billing() -> Response:
 @app.route("/billing/confirm")
 def billing_confirm() -> Response:
     """Handle Shopify charge confirmation callback."""
-    charge_id = request.args.get("charge_id") or session.get("pending_charge_id")
     shop = request.args.get("shop") or session.get("shopify_domain")
     token = session.get("access_token")
-    if not charge_id or not shop or not token:
+    if not shop or not token:
+        return render_template("error.html", message="Missing Shopify credentials. Please log in again.")
+
+    charge_id = request.args.get("charge_id") or session.get("pending_charge_id")
+    if not charge_id:
         return redirect(url_for("billing", message="Missing charge information."))
 
     try:
