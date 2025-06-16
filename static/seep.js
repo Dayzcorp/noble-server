@@ -35,7 +35,7 @@ async function send() {
     }
     append("bot", data.reply);
   } catch (e) {
-    append("bot", "SEEP is sleeping right now. Try again soon!");
+    append("bot", "SEEP is sleeping...");
   } finally {
     spinner.style.display = "none";
   }
