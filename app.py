@@ -309,6 +309,7 @@ def widget_js() -> Response:
   frame.style.border = 'none';
   frame.style.width = '100%';
   frame.style.height = '100%';
+  frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
   panel.appendChild(frame);
 
   bubble.addEventListener('click', function() {{
