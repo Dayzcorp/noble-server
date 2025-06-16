@@ -73,6 +73,13 @@ def require_billing():
     return redirect(url_for("billing", message="Please select a plan to continue."))
 
 
+def require_setup():
+    """Redirect to setup if chatbot settings are missing."""
+    if session.get("bot_name") and session.get("shopify_domain"):
+        return None
+    return redirect(url_for("setup"))
+
+
 # Initialize OpenAI client for OpenRouter. The modern SDK (>=1.76.2) no longer
 # accepts a `proxies` argument, so none is provided here.
 client = OpenAI(
@@ -137,28 +144,35 @@ def health() -> tuple[str, int]:
 @app.route("/setup", methods=["GET", "POST"])
 def setup() -> str:
     guard = require_billing()
-    if guard and request.method != "POST":
-        # Allow first-time setup without billing
-        cfg = get_config()
-        if not cfg.get("shopify_domain") or not cfg.get("shopify_token"):
-            guard = None
     if guard:
         return guard
 
-    cfg = get_config()
+    if session.get("bot_name") and session.get("shopify_domain"):
+        return redirect(url_for("index"))
+
     if request.method == "POST":
-        session["bot_name"] = request.form.get("bot_name", DEFAULT_BOT)
-        session["shopify_domain"] = request.form.get("shopify_domain", DEFAULT_DOMAIN)
-        token = request.form.get("shopify_token")
+        bot_name = request.form.get("bot_name", "").strip()
+        domain = request.form.get("shopify_domain", "").strip()
+        token = request.form.get("shopify_token", "").strip()
+        if not bot_name or not domain:
+            cfg = {"bot_name": bot_name or DEFAULT_BOT,
+                   "shopify_domain": domain,
+                   "shopify_token": token}
+            error = "Bot name and Shopify domain are required."
+            return render_template("setup.html", error=error, **cfg)
+        session["bot_name"] = bot_name
+        session["shopify_domain"] = domain
         if token:
             session["shopify_token"] = token
         return redirect(url_for("index"))
 
+    cfg = get_config()
     return render_template(
         "setup.html",
         bot_name=cfg["bot_name"],
         shopify_domain=cfg["shopify_domain"],
         shopify_token=cfg["shopify_token"],
+        error=None,
     )
 
 
@@ -167,6 +181,9 @@ def index() -> str:
     guard = require_billing()
     if guard:
         return guard
+    setup_guard = require_setup()
+    if setup_guard:
+        return setup_guard
     cfg = get_config()
     status = plan_status()
     plan_name = status["name"] if status else ""
@@ -186,6 +203,9 @@ def chat() -> tuple:
     guard = require_billing()
     if guard:
         return guard
+    setup_guard = require_setup()
+    if setup_guard:
+        return setup_guard
 
     data = request.get_json(force=True)
     user_input = data.get("prompt", "")
