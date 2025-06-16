@@ -68,9 +68,6 @@
       text-align: center;
     }
 </style>
-{% if success %}
-  <meta http-equiv="refresh" content="2; url={{ url_for('index') }}">
-{% endif %}
 </head>
 <body>
   <div class="branding">
@@ -83,9 +80,7 @@
     {% if error %}
       <div class="message" style="color:red;">{{ error }}</div>
     {% endif %}
-    {% if success %}
-      <div class="message">✅ Setup saved! Redirecting...</div>
-    {% endif %}
+
 
     <label for="bot_name">Chatbot Name:</label>
     <input type="text" id="bot_name" name="bot_name" placeholder="e.g. SEEP" value="{{ bot_name }}" required>

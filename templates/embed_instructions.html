@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Embed Instructions</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #f5f5f5;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 100%;
+    }
+    code {
+      display: block;
+      background: #eee;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      word-break: break-all;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #005b96;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover { background: #00487c; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🎉 Setup Complete</h1>
+    <p>Paste this into your Shopify <code>theme.liquid</code> file before &lt;/body&gt;:</p>
+    <code id="snippet">&lt;script src="https://noble-server.onrender.com/widget.js?shop={{ shopify_domain }}" async&gt;&lt;/script&gt;</code>
+    <button onclick="copy()">Copy to Clipboard</button>
+  </div>
+  <script>
+    function copy() {
+      const text = document.getElementById('snippet').innerText;
+      navigator.clipboard.writeText(text);
+    }
+  </script>
+</body>
+</html>
