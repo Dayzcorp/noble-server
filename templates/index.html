@@ -1,115 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{ bot_name }}</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
-    .chatbot {
-      position: fixed;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      margin: 0 auto 10px;
-      max-width: 400px;
-      width: 100%;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      z-index: 9999;
-    }
-    .header {
-      background-color: #005b96;
-      color: white;
-      padding: 10px;
-      text-align: center;
-    }
-    .messages {
-      flex: 1;
-      padding: 8px;
-      overflow-y: auto;
-    }
-    .user {
-      text-align: right;
-      margin: 4px 0;
-    }
-    .bot {
-      text-align: left;
-      margin: 4px 0;
-      color: #005b96;
-    }
-    .message-text {
-      display: inline-block;
-      max-width: 100%;
-      word-wrap: break-word;
-    }
-    .timestamp {
-      display: block;
-      font-size: 0.75em;
-      color: #777;
-    }
-    .input-area {
-      display: flex;
-      border-top: 1px solid #eee;
-    }
-    .input-area input {
-      flex: 1;
-      border: none;
-      padding: 8px;
-    }
-    .input-area button {
-      border: none;
-      background: #005b96;
-      color: #fff;
-      padding: 0 16px;
-    }
-    .spinner {
-      text-align: center;
-      padding: 8px;
-      display: none;
-    }
-    .spinner::after {
-      content: "";
-      display: inline-block;
-      width: 24px;
-      height: 24px;
-      border: 3px solid #ccc;
-      border-top-color: #005b96;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ bot_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            font-weight: bold;
+        }
+        .chat-wrapper {
+            max-width: 600px;
+            margin: 20px auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+        .chat-header {
+            background: #005b96;
+            color: #fff;
+            padding: 10px;
+        }
+        .messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        .user { text-align: right; margin: 6px 0; }
+        .bot { text-align: left; margin: 6px 0; color: #005b96; }
+        .message-text { display: inline-block; max-width: 100%; word-wrap: break-word; }
+        .timestamp { display: block; font-size: 0.75em; color: #777; }
+        .input-area { display: flex; border-top: 1px solid #eee; }
+        .input-area input {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            font-size: 1em;
+        }
+        .input-area button {
+            border: none;
+            padding: 0 20px;
+            background: #005b96;
+            color: #fff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .input-area button:hover { background: #00487c; }
+        .spinner { text-align: center; padding: 8px; display: none; }
+        .spinner::after {
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #ccc;
+            border-top-color: #005b96;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
-  <div class="chatbot">
-    <div class="header">{{ bot_name }}</div>
-    <div class="messages" id="msgs"></div>
-    <div id="spinner" class="spinner"></div>
-    <div class="input-area">
-      <input id="txt" placeholder="Ask {{ bot_name }}..." autocomplete="off" />
-      <button onclick="send()">Send</button>
-    </div>
-  </div>
+    <header>
+        <div>SEEP Assistant</div>
+        <div><a href="#">Help</a></div>
+    </header>
 
-  <script>
-    const CONFIG = {
-      bot_name: "{{ bot_name }}",
-      shopify_domain: "{{ shop_domain }}"
-    };
-  </script>
-  <script src="{{ url_for('static', filename='seep.js') }}"></script>
+    <div class="chat-wrapper">
+        <div class="chat-header">Chatting with {{ bot_name }}</div>
+        <div class="messages" id="msgs"></div>
+        <div id="spinner" class="spinner"></div>
+        <div class="input-area">
+            <input id="txt" placeholder="Ask {{ bot_name }}..." autocomplete="off" />
+            <button onclick="send()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            bot_name: "{{ bot_name }}",
+            shopify_domain: "{{ shop_domain }}"
+        };
+    </script>
+    <script src="{{ url_for('static', filename='seep.js') }}"></script>
 </body>
 </html>
