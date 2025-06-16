@@ -42,8 +42,8 @@
       position: absolute;
       top: -10px;
       right: -10px;
-      background: #d0e4ff;
-      color: #005b96;
+      background: #d0f0c0;
+      color: #004d26;
       padding: 4px 8px;
       border-radius: 5px;
       font-size: 0.8em;
@@ -76,7 +76,7 @@
     <div class="error">{{ message }}</div>
   {% endif %}
   <h1>Choose a SEEP Plan</h1>
-  <h2>Start your 7-day free trial or pick a commitment plan to unlock premium features.</h2>
+  <h2>Choose a flexible plan. Save more with longer commitments.</h2>
   {% if active and current_plan in plans %}
     <p style="text-align:center;"><strong>Current Plan:</strong> {{ plans[current_plan].name }}</p>
     <form method="post" action="{{ url_for('cancel_plan') }}" style="text-align:center; margin-bottom:40px;">
@@ -89,8 +89,10 @@
     {% set info = plans[key] %}
     <div class="plan">
       <h3>{{ info.name }}</h3>
-      {% if key == 'monthly' %}
+      {% if key == '12m' %}
         <div class="badge">Recommended</div>
+      {% endif %}
+      {% if key == 'monthly' %}
         <p>Free 7-day trial, then $14.99 for 30 days → $19.99/month thereafter</p>
         <span class="label green">Cancel Anytime</span>
       {% else %}
