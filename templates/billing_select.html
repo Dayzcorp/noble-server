@@ -104,11 +104,8 @@
   <h1>SEEP Assistant</h1>
   <h2>Choose a SEEP Plan</h2>
   <h2>Choose a flexible plan. Save more with longer commitments.</h2>
-  {% if active and current_plan in plans %}
-    <p style="text-align:center;"><strong>Current Plan:</strong> {{ plans[current_plan].name }}</p>
-    <form method="post" action="{{ url_for('cancel_plan') }}" style="text-align:center; margin-bottom:40px;">
-      <button type="submit">Cancel Subscription</button>
-    </form>
+  {% if session.billing_active %}
+    <p style="text-align:center;"><strong>Current Plan:</strong> {{ session.plan_name or 'SEEP Assistant Plan' }}</p>
   {% endif %}
   {% set order = ['monthly', '3m', '6m', '12m'] %}
   <div class="plans">
@@ -126,7 +123,8 @@
         <p>${{ '%.2f'|format(info.monthly_price) }}/month billed monthly</p>
         <span class="label red">Commitment Plan – Cannot Cancel Early</span>
       {% endif %}
-      <form method="post" action="{{ url_for('select_plan', plan=key) }}">
+      <form method="post" action="{{ url_for('billing') }}">
+        <input type="hidden" name="plan" value="{{ key }}">
         <button type="submit">Subscribe Now</button>
       </form>
     </div>

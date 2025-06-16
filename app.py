@@ -70,7 +70,7 @@ def get_config() -> dict:
 
 def require_billing():
     """Redirect to billing page if no active plan."""
-    if has_active_plan():
+    if has_active_plan() or session.get("billing_active"):
         return None
     return redirect(url_for("billing", message="Please select a plan to continue."))
 
@@ -210,9 +210,9 @@ def embed_instructions() -> str:
 @require_access
 def index() -> str:
     cfg = get_config()
-    status = plan_status()
-    plan_name = status["name"] if status else ""
-    expiry = status.get("expiry") if status else None
+    status = plan_status() if not session.get("billing_active") else None
+    plan_name = session.get("plan_name") if session.get("billing_active") else (status["name"] if status else "")
+    expiry = None if session.get("billing_active") else (status.get("expiry") if status else None)
     exp_str = expiry.strftime("%Y-%m-%d") if expiry else None
     return render_template(
         "index.html",
@@ -417,28 +417,78 @@ def plan_status() -> dict | None:
     return {"name": info["name"], "expiry": None}
 
 
-@app.route("/billing")
-def billing() -> str:
-    """Render plan selection page."""
-    message = request.args.get("message")
-    active = has_active_plan()
-    current_plan = session.get("plan")
-    return render_template(
-        "billing_select.html",
-        plans=BILLING_PLANS,
-        message=message,
-        active=active,
-        current_plan=current_plan,
-    )
+@app.route("/billing", methods=["GET", "POST"])
+def billing() -> Response:
+    """Trigger Shopify billing or show plan selection."""
+    if request.method == "GET":
+        if session.get("billing_active"):
+            return redirect(url_for("setup"))
+        message = request.args.get("message")
+        return render_template("billing_select.html", plans=BILLING_PLANS, message=message)
+
+    # POST - create recurring charge
+    shop = session.get("shopify_domain")
+    token = session.get("access_token")
+    if not shop or not token:
+        return redirect(url_for("billing", message="Missing shop credentials."))
+
+    payload = {
+        "recurring_application_charge": {
+            "name": "SEEP Assistant Plan",
+            "price": 14.99,
+            "trial_days": 7,
+            "return_url": url_for("billing_confirm", _external=True),
+            "test": False,
+        }
+    }
+    try:
+        resp = requests.post(
+            f"https://{shop}/admin/api/2023-04/recurring_application_charges.json",
+            json=payload,
+            headers={
+                "X-Shopify-Access-Token": token,
+                "Content-Type": "application/json",
+            },
+            timeout=10,
+        )
+        data = resp.json()
+        charge = data.get("recurring_application_charge", {})
+        confirmation_url = charge.get("confirmation_url")
+        if not confirmation_url:
+            raise ValueError("No confirmation URL")
+        session["pending_charge_id"] = charge.get("id")
+        return redirect(confirmation_url)
+    except Exception:
+        return redirect(url_for("billing", message="Could not initiate billing."))
 
 
-@app.route("/select_plan/<plan>", methods=["POST"])
-def select_plan(plan: str):
-    """Activate the selected plan (dummy billing)."""
-    if plan not in BILLING_PLANS:
-        return redirect(url_for("billing", message="Invalid plan."))
-    start_plan(plan)
-    return redirect(url_for("index"))
+@app.route("/billing/confirm")
+def billing_confirm() -> Response:
+    """Handle Shopify charge confirmation callback."""
+    charge_id = request.args.get("charge_id") or session.get("pending_charge_id")
+    shop = request.args.get("shop") or session.get("shopify_domain")
+    token = session.get("access_token")
+    if not charge_id or not shop or not token:
+        return redirect(url_for("billing", message="Missing charge information."))
+
+    try:
+        url = f"https://{shop}/admin/api/2023-04/recurring_application_charges/{charge_id}.json"
+        resp = requests.get(url, headers={"X-Shopify-Access-Token": token}, timeout=10)
+        data = resp.json().get("recurring_application_charge", {})
+        status = data.get("status")
+        if status == "accepted":
+            act_url = f"https://{shop}/admin/api/2023-04/recurring_application_charges/{charge_id}/activate.json"
+            requests.post(act_url, headers={"X-Shopify-Access-Token": token}, timeout=10)
+            session["billing_active"] = True
+            session["charge_id"] = charge_id
+            session["plan_name"] = data.get("name")
+            session.pop("pending_charge_id", None)
+            return redirect(url_for("setup"))
+        return redirect(url_for("billing", message="Charge was not accepted."))
+    except Exception:
+        return redirect(url_for("billing", message="Billing confirmation failed."))
+
+
 
 
 @app.route("/cancel_plan", methods=["POST"])
