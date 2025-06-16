@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 import requests
+import re
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -131,7 +132,8 @@ def chat() -> tuple:
             messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": user_input}],
         )
         reply = resp.choices[0].message.content
-        return jsonify({"reply": reply})
+        clean = re.sub(r"[\*_`]", "", reply)
+        return jsonify({"reply": clean})
     except Exception:
         return jsonify({"error": "server_error"}), 500
 
