@@ -24,6 +24,8 @@ def get_config() -> dict:
     }
 
 
+# Initialize OpenAI client for OpenRouter. The modern SDK (>=1.76.2) no longer
+# accepts a `proxies` argument, so none is provided here.
 client = OpenAI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
     base_url="https://openrouter.ai/api/v1",
