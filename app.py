@@ -93,7 +93,13 @@ def setup() -> str:
         token = request.form.get("shopify_token")
         if token:
             session["shopify_token"] = token
-        return redirect(url_for("index"))
+        return render_template(
+            "setup.html",
+            bot_name=session["bot_name"],
+            shopify_domain=session["shopify_domain"],
+            shopify_token=session.get("shopify_token", ""),
+            success=True,
+        )
 
     return render_template(
         "setup.html",
@@ -107,6 +113,12 @@ def setup() -> str:
 def index() -> str:
     cfg = get_config()
     return render_template("index.html", bot_name=cfg["bot_name"], shop_domain=cfg["shopify_domain"])
+
+
+@app.route("/billing")
+def billing() -> str:
+    """Display subscription plans."""
+    return render_template("billing.html")
 
 
 @app.route("/chat", methods=["POST"])

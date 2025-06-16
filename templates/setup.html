@@ -1,68 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Bot Setup</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 40px;
-      background: #f5f5f5;
-    }
-    form {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      max-width: 400px;
-      margin: auto;
-    }
-    input[type="text"], input[type="submit"] {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 16px;
-    }
-    input[type="submit"] {
-      background: #005b96;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    input[type="submit"]:hover {
-      background: #00487c;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f5f5f5;
+            text-align: center;
+        }
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            font-weight: bold;
+        }
+        form {
+            background: #fff;
+            padding: 30px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        label { display: block; margin-top: 15px; text-align: left; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        input[type="submit"] {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background: #005b96;
+            color: #fff;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover { background: #00487c; }
+        .success { margin-top: 15px; color: green; font-weight: bold; }
+    </style>
 </head>
 <body>
+    <header>
+        <div>SEEP Assistant</div>
+        <div><a href="#">Help</a></div>
+    </header>
 
-  <form id="setup-form" method="POST">
-    <h2>Configure Your Chatbot</h2>
+    <form id="setup-form" method="POST">
+        <h2>Configure Your Chatbot</h2>
+        <label for="bot_name">Chatbot Name:</label>
+        <input type="text" id="bot_name" name="bot_name" value="{{ bot_name }}" placeholder="e.g. SEEP" required>
+        <label for="shopify_domain">Shopify Domain:</label>
+        <input type="text" id="shopify_domain" name="shopify_domain" value="{{ shopify_domain }}" placeholder="example.myshopify.com" required>
+        <label for="shopify_token">Storefront Access Token:</label>
+        <input type="text" id="shopify_token" name="shopify_token" value="{{ shopify_token }}" placeholder="Paste token here...">
+        <input type="submit" value="Save and Continue">
+        {% if success %}
+        <p class="success">✅ Setup saved! Redirecting...</p>
+        <script>setTimeout(()=>window.location.href='/',1500);</script>
+        {% endif %}
+    </form>
 
-    <label for="bot_name">Chatbot Name:</label>
-    <input type="text" id="bot_name" name="bot_name" placeholder="e.g. SEEP" value="{{ bot_name }}" required>
-
-    <label for="shopify_domain">Shopify Domain:</label>
-    <input type="text" id="shopify_domain" name="shopify_domain" placeholder="example.myshopify.com" value="{{ shopify_domain }}" required>
-
-    <label for="shopify_token">Storefront Access Token:</label>
-    <input type="text" id="shopify_token" name="shopify_token" placeholder="Paste token here..." value="{{ shopify_token }}">
-
-    <input type="submit" value="Save & Launch">
-  </form>
-
-  <script>
-    const form = document.getElementById('setup-form');
-    form.addEventListener('submit', () => {
-      sessionStorage.setItem('bot_name', document.getElementById('bot_name').value);
-      sessionStorage.setItem('shopify_domain', document.getElementById('shopify_domain').value);
-      const token = document.getElementById('shopify_token').value;
-      if (token) {
-        sessionStorage.setItem('shopify_token', token);
-      }
-    });
-  </script>
-
+    <script>
+        const form = document.getElementById('setup-form');
+        form.addEventListener('submit', () => {
+            sessionStorage.setItem('bot_name', document.getElementById('bot_name').value);
+            sessionStorage.setItem('shopify_domain', document.getElementById('shopify_domain').value);
+            const token = document.getElementById('shopify_token').value;
+            if (token) sessionStorage.setItem('shopify_token', token);
+        });
+    </script>
 </body>
 </html>
