@@ -7,17 +7,32 @@
   <style>
     body {
       margin: 0;
-      padding: 0;
+      padding: 20px;
+      padding-top: 60px;
       font-family: Arial, sans-serif;
     }
+    .branding {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: #005b96;
+      color: #fff;
+      font-weight: bold;
+    }
+    .branding a { color: #fff; text-decoration: none; }
     .chatbot {
       position: fixed;
       bottom: 0;
       right: 0;
       left: 0;
-      margin: 0 auto 10px;
-      max-width: 400px;
-      width: 100%;
+      margin: 0 auto 20px;
+      max-width: 600px;
+      width: calc(100% - 20px);
       background-color: white;
       border: 1px solid #ccc;
       border-radius: 10px;
@@ -71,17 +86,26 @@
       background: #005b96;
       color: #fff;
       padding: 0 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .input-area button:hover {
+      background: #00487c;
     }
     .spinner {
       text-align: center;
       padding: 8px;
       display: none;
     }
-  </style>
+</style>
 </head>
 <body>
+  <div class="branding">
+    <span>SEEP Assistant</span>
+    <a href="#">Help</a>
+  </div>
   <div class="chatbot">
-    <div class="header">{{ bot_name }}</div>
+    <div class="header">Chatting with {{ bot_name }}</div>
     <div class="messages" id="msgs"></div>
     <div id="spinner" class="spinner">Loading...</div>
     <div class="input-area">

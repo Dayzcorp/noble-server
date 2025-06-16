@@ -5,13 +5,29 @@
   <title>Choose a SEEP Plan</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 40px 20px;
+      padding: 20px;
+      padding-top: 60px;
+      font-family: Arial, sans-serif;
       background: linear-gradient(to bottom right, #f5f7fa, #e4ecf4);
     }
+    .branding {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: #005b96;
+      color: #fff;
+      font-weight: bold;
+    }
+    .branding a { color: #fff; text-decoration: none; }
     h1, h2 {
       text-align: center;
+      margin-top: 60px;
     }
     .error {
       color: red;
@@ -26,6 +42,10 @@
       max-width: 1000px;
       margin: auto;
     }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
     .plan {
       background: #fff;
       padding: 20px;
@@ -37,6 +57,7 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      animation: fadein 0.5s ease forwards;
     }
     .badge {
       position: absolute;
@@ -65,17 +86,23 @@
       padding: 10px;
       border-radius: 5px;
       cursor: pointer;
+      transition: background 0.3s;
     }
     .plan button:hover {
       background: #00487c;
     }
-  </style>
+</style>
 </head>
 <body>
+  <div class="branding">
+    <span>SEEP Assistant</span>
+    <a href="#">Help</a>
+  </div>
   {% if message %}
     <div class="error">{{ message }}</div>
   {% endif %}
-  <h1>Choose a SEEP Plan</h1>
+  <h1>SEEP Assistant</h1>
+  <h2>Choose a SEEP Plan</h2>
   <h2>Choose a flexible plan. Save more with longer commitments.</h2>
   {% if active and current_plan in plans %}
     <p style="text-align:center;"><strong>Current Plan:</strong> {{ plans[current_plan].name }}</p>

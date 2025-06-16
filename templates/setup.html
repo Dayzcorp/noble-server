@@ -5,13 +5,30 @@
   <title>Bot Setup</title>
   <style>
     body {
+      margin: 0;
+      padding: 20px;
+      padding-top: 60px;
+      font-family: Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      font-family: Arial, sans-serif;
       background: #f5f5f5;
     }
+    .branding {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: #005b96;
+      color: #fff;
+      font-weight: bold;
+    }
+    .branding a { color: #fff; text-decoration: none; }
     form {
       background: #fff;
       padding: 20px;
@@ -20,12 +37,16 @@
       width: 100%;
       max-width: 400px;
     }
+    label {
+      margin-top: 10px;
+      display: block;
+    }
     input[type="text"],
     input[type="password"],
     button {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
+      margin-top: 5px;
       font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 5px;
@@ -36,16 +57,35 @@
       color: white;
       border: none;
       cursor: pointer;
+      font-size: 18px;
+      transition: background 0.3s;
     }
     button:hover {
       background: #00487c;
     }
-  </style>
+    .message {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+</style>
+{% if success %}
+  <meta http-equiv="refresh" content="2; url={{ url_for('index') }}">
+{% endif %}
 </head>
 <body>
+  <div class="branding">
+    <span>SEEP Assistant</span>
+    <a href="#">Help</a>
+  </div>
 
   <form method="POST">
     <h2>Configure Your Chatbot</h2>
+    {% if error %}
+      <div class="message" style="color:red;">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="message">✅ Setup saved! Redirecting...</div>
+    {% endif %}
 
     <label for="bot_name">Chatbot Name:</label>
     <input type="text" id="bot_name" name="bot_name" placeholder="e.g. SEEP" value="{{ bot_name }}" required>

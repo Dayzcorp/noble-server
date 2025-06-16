@@ -169,16 +169,26 @@ def setup() -> str:
         domain = request.form.get("shopify_domain", "").strip()
         token = request.form.get("shopify_token", "").strip()
         if not bot_name or not domain:
-            cfg = {"bot_name": bot_name or DEFAULT_BOT,
-                   "shopify_domain": domain,
-                   "shopify_token": token}
+            cfg = {
+                "bot_name": bot_name or DEFAULT_BOT,
+                "shopify_domain": domain,
+                "shopify_token": token,
+            }
             error = "Bot name and Shopify domain are required."
             return render_template("setup.html", error=error, **cfg)
+
         session["bot_name"] = bot_name
         session["shopify_domain"] = domain
         if token:
             session["shopify_token"] = token
-        return redirect(url_for("index"))
+
+        return render_template(
+            "setup.html",
+            bot_name=bot_name,
+            shopify_domain=domain,
+            shopify_token=token,
+            success=True,
+        )
 
     cfg = get_config()
     return render_template(
