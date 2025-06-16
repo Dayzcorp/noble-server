@@ -9,6 +9,7 @@ from flask import (
     url_for,
     session,
     abort,
+    Response,
 )
 import requests
 import re
@@ -214,6 +215,18 @@ def index() -> str:
         shop_domain=cfg["shopify_domain"],
         plan_name=plan_name,
         plan_expiry=exp_str,
+        host=request.url_root.rstrip("/"),
+    )
+
+
+@app.route("/chat", methods=["GET"])
+def chat_window() -> str:
+    """Public chat window shown inside the storefront iframe."""
+    cfg = get_config()
+    return render_template(
+        "chat.html",
+        bot_name=cfg["bot_name"],
+        shop_domain=cfg["shopify_domain"],
     )
 
 
@@ -247,6 +260,70 @@ def chat() -> tuple:
         return jsonify({"reply": clean})
     except Exception:
         return jsonify({"error": "server_error"}), 500
+
+
+@app.route("/widget.js")
+def widget_js() -> Response:
+    """Serve the storefront widget script."""
+    shop = request.args.get("shop", "")
+    host = request.url_root.rstrip("/")
+    js = f"""
+(function() {{
+  if (window.SEEPWidgetLoaded) return; 
+  window.SEEPWidgetLoaded = true;
+  var bubble = document.createElement('div');
+  bubble.id = 'seep-bubble';
+  bubble.style.position = 'fixed';
+  bubble.style.bottom = '20px';
+  bubble.style.right = '20px';
+  bubble.style.width = '60px';
+  bubble.style.height = '60px';
+  bubble.style.borderRadius = '50%';
+  bubble.style.background = '#005b96';
+  bubble.style.color = '#fff';
+  bubble.style.display = 'flex';
+  bubble.style.justifyContent = 'center';
+  bubble.style.alignItems = 'center';
+  bubble.style.cursor = 'pointer';
+  bubble.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+  bubble.style.zIndex = '9999';
+  bubble.textContent = 'SEEP';
+
+  var panel = document.createElement('div');
+  panel.id = 'seep-panel';
+  panel.style.position = 'fixed';
+  panel.style.bottom = '90px';
+  panel.style.right = '20px';
+  panel.style.width = '400px';
+  panel.style.height = '0';
+  panel.style.maxHeight = '500px';
+  panel.style.background = '#fff';
+  panel.style.borderRadius = '8px';
+  panel.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+  panel.style.overflow = 'hidden';
+  panel.style.transition = 'height 0.3s ease';
+  panel.style.zIndex = '9999';
+
+  var frame = document.createElement('iframe');
+  frame.src = '{host}/chat?shop={shop}';
+  frame.style.border = 'none';
+  frame.style.width = '100%';
+  frame.style.height = '100%';
+  panel.appendChild(frame);
+
+  bubble.addEventListener('click', function() {{
+    if (panel.style.height === '0px' || panel.style.height === '') {{
+      panel.style.height = '500px';
+    }} else {{
+      panel.style.height = '0';
+    }}
+  }});
+
+  document.body.appendChild(bubble);
+  document.body.appendChild(panel);
+}})();
+"""
+    return Response(js, mimetype="text/javascript")
 
 
 # ---------------------------------------------------------------------------

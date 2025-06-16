@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ bot_name }}</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .chatbot {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+    .header {
+      background: #005b96;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+    .messages {
+      flex: 1;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    .user { text-align: right; margin: 4px 0; }
+    .bot { text-align: left; margin: 4px 0; color: #005b96; }
+    .message-text { display: inline-block; max-width: 100%; word-wrap: break-word; }
+    .timestamp { display: block; font-size: 0.75em; color: #777; }
+    .input-area { display: flex; border-top: 1px solid #eee; }
+    .input-area input { flex: 1; border: none; padding: 8px; }
+    .input-area button { border: none; background: #005b96; color: #fff; padding: 0 16px; cursor: pointer; }
+    .input-area button:hover { background: #00487c; }
+    .spinner { text-align: center; padding: 8px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="chatbot">
+    <div class="header">Chatting with {{ bot_name }}</div>
+    <div class="messages" id="msgs"></div>
+    <div id="spinner" class="spinner">Loading...</div>
+    <div class="input-area">
+      <input id="txt" placeholder="Ask {{ bot_name }}..." autocomplete="off" />
+      <button onclick="send()">Send</button>
+    </div>
+  </div>
+  <script>
+    const CONFIG = {
+      bot_name: "{{ bot_name }}",
+      shopify_domain: "{{ shop_domain }}"
+    };
+  </script>
+  <script src="{{ url_for('static', filename='seep.js') }}"></script>
+</body>
+</html>
