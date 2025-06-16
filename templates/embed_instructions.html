@@ -30,6 +30,8 @@
       border-radius: 5px;
       font-family: monospace;
       word-break: break-all;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
     button {
       margin-top: 10px;
@@ -46,7 +48,8 @@
 <body>
   <div class="box">
     <h1>🎉 Setup Complete</h1>
-    <p>Paste this into your Shopify <code>theme.liquid</code> file before &lt;/body&gt;:</p>
+    <h2>Add SEEP Assistant to your store</h2>
+    <p>Paste the code below into your Shopify <code>theme.liquid</code> file before &lt;/body&gt;:</p>
     <code id="snippet">&lt;script src="https://noble-server.onrender.com/widget.js?shop={{ shopify_domain }}" async&gt;&lt;/script&gt;</code>
     <button onclick="copy()">Copy to Clipboard</button>
   </div>
