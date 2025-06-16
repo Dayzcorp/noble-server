@@ -1,4 +1,5 @@
 import os
+from functools import wraps
 from flask import (
     Flask,
     request,
@@ -78,6 +79,19 @@ def require_setup():
     if session.get("bot_name") and session.get("shopify_domain"):
         return None
     return redirect(url_for("setup"))
+
+
+def require_access(func):
+    """Ensure billing and setup have been completed."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not has_active_plan() and not session.get("billing_active"):
+            return redirect(url_for("billing"))
+        if not session.get("bot_name") or not session.get("shopify_domain"):
+            return redirect(url_for("setup"))
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 # Initialize OpenAI client for OpenRouter. The modern SDK (>=1.76.2) no longer
@@ -177,13 +191,8 @@ def setup() -> str:
 
 
 @app.route("/")
+@require_access
 def index() -> str:
-    guard = require_billing()
-    if guard:
-        return guard
-    setup_guard = require_setup()
-    if setup_guard:
-        return setup_guard
     cfg = get_config()
     status = plan_status()
     plan_name = status["name"] if status else ""
@@ -199,13 +208,8 @@ def index() -> str:
 
 
 @app.route("/chat", methods=["POST"])
+@require_access
 def chat() -> tuple:
-    guard = require_billing()
-    if guard:
-        return guard
-    setup_guard = require_setup()
-    if setup_guard:
-        return setup_guard
 
     data = request.get_json(force=True)
     user_input = data.get("prompt", "")
@@ -247,6 +251,7 @@ def start_plan(plan_key: str) -> None:
     session["plan"] = plan_key
     session["billing_start"] = now.isoformat()
     session.pop("canceled", None)
+    session["billing_active"] = True
 
 
 def months_since(start: str) -> int:
@@ -359,6 +364,7 @@ def cancel_plan():
     session["canceled"] = True
     for key in ["plan", "billing_start"]:
         session.pop(key, None)
+    session.pop("billing_active", None)
     return redirect(url_for("billing", message="Subscription canceled."))
 
 
