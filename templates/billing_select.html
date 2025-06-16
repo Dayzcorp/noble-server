@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Plan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+    .plan {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    button {
+      background: #005b96;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  {% if message %}
+  <p style="color:red;">{{ message }}</p>
+  {% endif %}
+  <h2>Select a SEEP Plan</h2>
+  {% for key, info in plans.items() %}
+    <div class="plan">
+      <h3>
+        {% if key == 'monthly' %}Monthly (Cancel Anytime){% elif key == '3m' %}3-Month Plan{% elif key == '6m' %}6-Month Plan{% else %}1-Year Plan{% endif %}
+      </h3>
+      <p>
+        {% if key == 'monthly' %}
+          7-day free trial → $14.99 for 30 days → then $19.99/month
+        {% else %}
+          One-time ${{ '%.2f'|format(info.price) }}
+        {% endif %}
+      </p>
+      <form method="post" action="{{ url_for('billing_create', plan=key) }}">
+        <button type="submit">Continue</button>
+      </form>
+    </div>
+  {% endfor %}
+</body>
+</html>
