@@ -11,6 +11,7 @@ from flask import (
 )
 import requests
 import re
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -23,12 +24,34 @@ DEFAULT_BOT = os.getenv("BOT_NAME", "SEEP")
 DEFAULT_DOMAIN = os.getenv("SHOP_DOMAIN", "example.myshopify.com")
 DEFAULT_TOKEN = os.getenv("SHOPIFY_STOREFRONT_TOKEN", "")
 
-# Basic plan definitions for billing. Prices are in USD.
+# Billing plan metadata for the dummy billing system. Prices are monthly.
 BILLING_PLANS = {
-    "monthly": {"price": 14.99, "trial_days": 7, "name": "SEEP Monthly Plan"},
-    "3m": {"price": 53.97, "trial_days": 0, "name": "SEEP 3 Month Plan"},
-    "6m": {"price": 95.94, "trial_days": 0, "name": "SEEP 6 Month Plan"},
-    "12m": {"price": 159.92, "trial_days": 0, "name": "SEEP Annual Plan"},
+    # 7 day trial, then $14.99 for the first 30 days, auto renew $19.99
+    "monthly": {
+        "name": "Free Trial + Monthly",
+        "monthly_price": 19.99,
+        "intro_price": 14.99,
+        "trial_days": 7,
+        "commitment": 0,
+    },
+    "3m": {
+        "name": "3-Month Commitment",
+        "monthly_price": 17.99,
+        "trial_days": 0,
+        "commitment": 3,
+    },
+    "6m": {
+        "name": "6-Month Commitment",
+        "monthly_price": 15.99,
+        "trial_days": 0,
+        "commitment": 6,
+    },
+    "12m": {
+        "name": "1-Year Commitment",
+        "monthly_price": 13.33,
+        "trial_days": 0,
+        "commitment": 12,
+    },
 }
 
 SHOPIFY_API_VERSION = "2023-10"
@@ -44,10 +67,12 @@ def get_config() -> dict:
 
 
 def require_billing():
-    """Redirect to billing page if no active charge is stored."""
-    if session.get("charge_status") == "active":
+    """Redirect to billing page if no active subscription is stored."""
+    if session.get("subscription_active"):
         return None
-    return redirect(url_for("billing_select", message="Please accept billing to continue using SEEP."))
+    return redirect(
+        url_for("billing_select", message="Please subscribe to continue using SEEP.")
+    )
 
 
 # Initialize OpenAI client for OpenRouter. The modern SDK (>=1.76.2) no longer
@@ -182,82 +207,82 @@ def chat() -> tuple:
         return jsonify({"error": "server_error"}), 500
 
 
-def create_shopify_charge(plan_key: str) -> tuple[str, int] | tuple[None, None]:
-    """Create a RecurringApplicationCharge and return confirmation URL and id."""
+# ---------------------------------------------------------------------------
+# Dummy billing helpers
+# ---------------------------------------------------------------------------
+
+def start_subscription(plan_key: str) -> None:
+    """Activate a subscription in the user's session."""
     plan = BILLING_PLANS.get(plan_key)
-    cfg = get_config()
-    domain = cfg.get("shopify_domain")
-    token = cfg.get("shopify_token")
-    if not plan or not domain or not token:
-        return None, None
-    url = (
-        f"https://{domain}/admin/api/{SHOPIFY_API_VERSION}/recurring_application_charges.json"
-    )
-    charge = {
-        "name": plan["name"],
-        "price": plan["price"],
-        "trial_days": plan["trial_days"],
-        "return_url": url_for("billing_confirm", _external=True),
-        "test": True,
-    }
-    headers = {
-        "X-Shopify-Access-Token": token,
-        "Content-Type": "application/json",
-    }
-    try:
-        resp = requests.post(
-            url, json={"recurring_application_charge": charge}, headers=headers, timeout=10
-        )
-        data = resp.json().get("recurring_application_charge", {})
-        return data.get("confirmation_url"), data.get("id")
-    except Exception:
-        return None, None
+    if not plan:
+        return
+    now = datetime.utcnow()
+    session["subscription_type"] = plan_key
+    session["subscription_active"] = True
+    session["subscription_start"] = now.isoformat()
+    session["commitment_months"] = plan.get("commitment", 0)
+    trial_days = plan.get("trial_days", 0)
+    if trial_days:
+        session["trial_end"] = (now + timedelta(days=trial_days)).isoformat()
+    else:
+        session.pop("trial_end", None)
+
+
+def months_since(start: str) -> int:
+    dt = datetime.fromisoformat(start)
+    now = datetime.utcnow()
+    return (now.year - dt.year) * 12 + now.month - dt.month
 
 
 @app.route("/billing/select")
 def billing_select() -> str:
     """Render plan selection page."""
     message = request.args.get("message")
-    return render_template("billing_select.html", plans=BILLING_PLANS, message=message)
-
-
-@app.route("/billing/create/<plan>", methods=["POST"])
-def billing_create(plan: str):
-    """Create a charge for the selected plan and redirect to Shopify."""
-    confirmation_url, cid = create_shopify_charge(plan)
-    if not confirmation_url:
-        return redirect(url_for("billing_select", message="Could not create charge."))
-    session["plan"] = plan
-    session["charge_id"] = cid
-    session["charge_status"] = "pending"
-    return redirect(confirmation_url)
-
-
-@app.route("/billing/confirm")
-def billing_confirm() -> str:
-    """Activate the charge after the merchant accepts it."""
-    charge_id = request.args.get("charge_id") or session.get("charge_id")
-    if not charge_id:
-        return redirect(url_for("billing_select", message="Missing charge id."))
-    cfg = get_config()
-    domain = cfg.get("shopify_domain")
-    token = cfg.get("shopify_token")
-    url = (
-        f"https://{domain}/admin/api/{SHOPIFY_API_VERSION}/recurring_application_charges/{charge_id}/activate.json"
+    active = session.get("subscription_active")
+    current_plan = session.get("subscription_type")
+    return render_template(
+        "billing_select.html",
+        plans=BILLING_PLANS,
+        message=message,
+        active=active,
+        current_plan=current_plan,
     )
-    headers = {
-        "X-Shopify-Access-Token": token,
-        "Content-Type": "application/json",
-    }
-    try:
-        resp = requests.post(url, headers=headers, timeout=10)
-        if resp.status_code == 200:
-            session["charge_status"] = "active"
-        else:
-            session["charge_status"] = "declined"
-    except Exception:
-        session["charge_status"] = "declined"
+
+
+@app.route("/billing/subscribe/<plan>", methods=["POST"])
+def billing_subscribe(plan: str):
+    """Activate the selected plan (dummy billing)."""
+    if plan not in BILLING_PLANS:
+        return redirect(url_for("billing_select", message="Invalid plan."))
+    start_subscription(plan)
     return redirect(url_for("index"))
+
+
+@app.route("/billing/cancel", methods=["POST"])
+def billing_cancel():
+    """Attempt to cancel the current subscription."""
+    if not session.get("subscription_active"):
+        return redirect(url_for("billing_select"))
+    plan = session.get("subscription_type")
+    info = BILLING_PLANS.get(plan, {})
+    start = session.get("subscription_start")
+    if start and info.get("commitment"):
+        months = months_since(start)
+        if months < info["commitment"]:
+            msg = "This plan cannot be canceled until the commitment period ends."
+            return redirect(url_for("billing_select", message=msg))
+    for key in [
+        "subscription_active",
+        "subscription_type",
+        "subscription_start",
+        "commitment_months",
+        "trial_end",
+    ]:
+        session.pop(key, None)
+    return redirect(url_for("billing_select", message="Subscription canceled."))
+
+
+
 
 
 if __name__ == "__main__":

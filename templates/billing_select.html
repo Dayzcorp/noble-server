@@ -31,20 +31,27 @@
   <p style="color:red;">{{ message }}</p>
   {% endif %}
   <h2>Select a SEEP Plan</h2>
+  {% if active and current_plan in plans %}
+    <p><strong>Current Plan:</strong> {{ plans[current_plan].name }}</p>
+    <form method="post" action="{{ url_for('billing_cancel') }}">
+      <button type="submit">Cancel Subscription</button>
+    </form>
+    <hr>
+  {% endif %}
   {% for key, info in plans.items() %}
     <div class="plan">
-      <h3>
-        {% if key == 'monthly' %}Monthly (Cancel Anytime){% elif key == '3m' %}3-Month Plan{% elif key == '6m' %}6-Month Plan{% else %}1-Year Plan{% endif %}
-      </h3>
+      <h3>{{ info.name }}</h3>
       <p>
         {% if key == 'monthly' %}
-          7-day free trial → $14.99 for 30 days → then $19.99/month
+          Free 7-day trial, then $14.99 for 30 days → $19.99/month thereafter
+          <br><span style="color:green;">Cancel Anytime</span>
         {% else %}
-          One-time ${{ '%.2f'|format(info.price) }}
+          ${{ '%.2f'|format(info.monthly_price) }}/month billed monthly
+          <br><span style="color:red;">Commitment Plan – Cannot Cancel Early</span>
         {% endif %}
       </p>
-      <form method="post" action="{{ url_for('billing_create', plan=key) }}">
-        <button type="submit">Continue</button>
+      <form method="post" action="{{ url_for('billing_subscribe', plan=key) }}">
+        <button type="submit">Subscribe Now</button>
       </form>
     </div>
   {% endfor %}
