@@ -156,6 +156,12 @@ def health() -> tuple[str, int]:
     return "OK", 200
 
 
+@app.route("/help")
+def help_page() -> str:
+    """Render the help documentation."""
+    return render_template("help.html")
+
+
 @app.route("/setup", methods=["GET", "POST"])
 def setup() -> str:
     guard = require_billing()
