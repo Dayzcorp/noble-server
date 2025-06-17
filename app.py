@@ -443,66 +443,29 @@ def billing() -> Response:
     if not shop or not token:
         return redirect(url_for("billing", message="Missing shop credentials."))
 
-    payload = {
-        "recurring_application_charge": {
-            "name": "SEEP Assistant Plan",
-            "price": 14.99,
-            "trial_days": 7,
-            "return_url": url_for("billing_confirm", _external=True),
-            "test": False,
-        }
-    }
-    try:
-        resp = requests.post(
-            f"https://{shop}/admin/api/2023-04/recurring_application_charges.json",
-            json=payload,
-            headers={
-                "X-Shopify-Access-Token": token,
-                "Content-Type": "application/json",
-            },
-            timeout=10,
-        )
-        data = resp.json()
-        charge = data.get("recurring_application_charge", {})
-        confirmation_url = charge.get("confirmation_url")
-        if not confirmation_url:
-            raise ValueError("No confirmation URL")
-        session["pending_charge_id"] = charge.get("id")
-        return redirect(confirmation_url)
-    except Exception:
-        return redirect(url_for("billing", message="Could not initiate billing."))
+    # Skip the real API call since we're using dummy values
+    # Normally you'd call Shopify's billing API here
+
+    plan_name = request.form.get("plan_name", "SEEP Assistant Plan")
+    plan_id = 123456  # fake ID for now
+
+    # Simulate what Shopify would redirect to
+    mock_confirmation_url = (
+        f"/billing/confirm?charge_id={plan_id}&shop=test-shop.myshopify.com"
+    )
+    return redirect(mock_confirmation_url)
 
 
 @app.route("/billing/confirm")
 def billing_confirm() -> Response:
     """Handle Shopify charge confirmation callback."""
     # TEMP fallback for charge confirmation step
-    shop = session.get("shopify_domain", "test-shop.myshopify.com")
-    token = session.get("access_token", "fake_token_123")
-    shop = request.args.get("shop") or shop
-    if not shop or not token:
-        return render_template("error.html", message="Missing Shopify credentials. Please log in again.")
+    # Fake charge confirmation — skip real API call
+    session["billing_active"] = True
+    session["plan_name"] = "Mock SEEP Plan"
+    session["charge_id"] = request.args.get("charge_id", "123456")
 
-    charge_id = request.args.get("charge_id") or session.get("pending_charge_id")
-    if not charge_id:
-        return redirect(url_for("billing", message="Missing charge information."))
-
-    try:
-        url = f"https://{shop}/admin/api/2023-04/recurring_application_charges/{charge_id}.json"
-        resp = requests.get(url, headers={"X-Shopify-Access-Token": token}, timeout=10)
-        data = resp.json().get("recurring_application_charge", {})
-        status = data.get("status")
-        if status == "accepted":
-            act_url = f"https://{shop}/admin/api/2023-04/recurring_application_charges/{charge_id}/activate.json"
-            requests.post(act_url, headers={"X-Shopify-Access-Token": token}, timeout=10)
-            session["billing_active"] = True
-            session["charge_id"] = charge_id
-            session["plan_name"] = data.get("name")
-            session.pop("pending_charge_id", None)
-            return redirect(url_for("setup"))
-        return redirect(url_for("billing", message="Charge was not accepted."))
-    except Exception:
-        return redirect(url_for("billing", message="Billing confirmation failed."))
+    return redirect("/setup")
 
 
 
