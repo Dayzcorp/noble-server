@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SEEP Help</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0 auto;
+      padding: 20px;
+      max-width: 800px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #005b96;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #ccc;
+      margin: 40px 0;
+    }
+    section {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>SEEP Assistant Help</h1>
+
+  <section>
+    <h2>How to Add SEEP to Your Shopify Store</h2>
+    <ol>
+      <li>Log into your Shopify Admin</li>
+      <li>Go to <em>Online Store → Themes</em></li>
+      <li>Click <em>Actions → Edit Code</em></li>
+      <li>Under the <em>Layout</em> folder, open <code>theme.liquid</code></li>
+      <li>Scroll to the bottom of the file, just above <code>&lt;/body&gt;</code></li>
+      <li>Paste the script:</li>
+    </ol>
+    <pre><code>&lt;script src="https://noble-server.onrender.com/widget.js?shop=your-shop.myshopify.com" async&gt;&lt;/script&gt;</code></pre>
+    <ol start="7">
+      <li>Click Save</li>
+    </ol>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>How to Find Your Shopify Domain</h2>
+    <p>Look at the URL when logged into Shopify, it’s usually:<br>
+    <code>your-store.myshopify.com</code></p>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>How to Get Your Storefront Access Token</h2>
+    <ol>
+      <li>In Shopify Admin, go to Apps → Develop Apps</li>
+      <li>Click Create App</li>
+      <li>Name it “SEEP Assistant”</li>
+      <li>Go to Configuration → Storefront API</li>
+      <li>Add the following access scope:<br><strong>read_products</strong></li>
+      <li>Save and Install the app</li>
+      <li>Shopify will generate a token — copy and paste this into SEEP</li>
+    </ol>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>Need Help?</h2>
+    <p>Email us at:<br>
+    <a href="mailto:info@seep.to">info@seep.to</a></p>
+  </section>
+</body>
+</html>
