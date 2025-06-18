@@ -162,6 +162,12 @@ def help_page() -> str:
     return render_template("help.html")
 
 
+@app.route("/privacy")
+def privacy() -> str:
+    """Show the privacy policy."""
+    return render_template("privacy.html")
+
+
 @app.route("/setup", methods=["GET", "POST"])
 def setup() -> str:
     guard = require_billing()
