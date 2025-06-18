@@ -26,34 +26,15 @@ DEFAULT_BOT = os.getenv("BOT_NAME", "SEEP")
 DEFAULT_DOMAIN = os.getenv("SHOP_DOMAIN", "example.myshopify.com")
 DEFAULT_TOKEN = os.getenv("SHOPIFY_STOREFRONT_TOKEN", "")
 
-# Billing plan metadata for the dummy billing system. Prices are monthly.
+# Billing plan metadata for the dummy billing system.
+# Only a single public plan is available.
 BILLING_PLANS = {
-    # 7 day trial, then $14.99 for the first 30 days, auto renew $19.99
-    "monthly": {
-        "name": "Free Trial + Monthly",
+    "pro_plan": {
+        "name": "Pro Plan",
         "monthly_price": 19.99,
-        "intro_price": 14.99,
+        "yearly_price": 159.92,
         "trial_days": 7,
-        "commitment": 0,
-    },
-    "3m": {
-        "name": "3-Month Commitment",
-        "monthly_price": 17.99,
-        "trial_days": 0,
-        "commitment": 3,
-    },
-    "6m": {
-        "name": "6-Month Commitment",
-        "monthly_price": 15.99,
-        "trial_days": 0,
-        "commitment": 6,
-    },
-    "12m": {
-        "name": "1-Year Commitment",
-        "monthly_price": 13.33,
-        "trial_days": 0,
-        "commitment": 12,
-    },
+    }
 }
 
 SHOPIFY_API_VERSION = "2023-10"
@@ -380,12 +361,9 @@ def has_active_plan() -> bool:
     now = datetime.utcnow()
     start_dt = datetime.fromisoformat(start)
 
-    if plan == "monthly":
+    if plan == "pro_plan":
         trial_end = start_dt + timedelta(days=info.get("trial_days", 0))
-        intro_end = trial_end + timedelta(days=30)
         if now < trial_end:
-            return True
-        if now < intro_end:
             return True
         # auto-renews indefinitely unless canceled
         return True
@@ -412,13 +390,10 @@ def plan_status() -> dict | None:
     start_dt = datetime.fromisoformat(start)
     now = datetime.utcnow()
 
-    if plan == "monthly":
+    if plan == "pro_plan":
         trial_end = start_dt + timedelta(days=info.get("trial_days", 0))
-        intro_end = trial_end + timedelta(days=30)
         if now < trial_end:
             return {"name": info["name"], "expiry": trial_end}
-        if now < intro_end:
-            return {"name": info["name"], "expiry": intro_end}
         return {"name": info["name"], "expiry": None}
 
     commitment = info.get("commitment", 0)
@@ -458,7 +433,7 @@ def billing() -> Response:
     # Skip the real API call since we're using dummy values
     # Normally you'd call Shopify's billing API here
 
-    plan_name = request.form.get("plan_name", "SEEP Assistant Plan")
+    plan_name = request.form.get("plan_name", "Pro Plan")
     plan_id = 123456  # fake ID for now
 
     # Simulate what Shopify would redirect to
@@ -474,10 +449,11 @@ def billing_confirm() -> Response:
     # TEMP fallback for charge confirmation step
     # Fake charge confirmation — skip real API call
     session["billing_active"] = True
-    session["plan_name"] = "Mock SEEP Plan"
+    session["plan_name"] = "Pro Plan"
     session["charge_id"] = request.args.get("charge_id", "123456")
+    start_plan("pro_plan")
 
-    return redirect("/setup")
+    return redirect("/")
 
 
 
